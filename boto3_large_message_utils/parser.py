@@ -16,11 +16,10 @@ class LargeMessageParser:
             self.s3 = session.client("s3")
         self.s3 = boto3.client("s3")
 
-    def parse(self, message):
-        if not isinstance(message, str):
-            raise ValueError('"message" argument expects type "str"')
+    def parse_json(self, json_message):
+        if not isinstance(json_message, dict):
+            raise ValueError('"message" argument expects type "dict"')
         try:
-            json_message = json.loads(message)
             if json_message.get("compressedMessage"):
                 return decode_and_decompress_string(
                     json_message.get("compressedMessage")
@@ -31,7 +30,18 @@ class LargeMessageParser:
                     key=json_message["key"],
                     compressed=json_message["compressed"],
                 )
-            return message
+            return json_message
+        except (KeyError, JSONDecodeError):
+            return json_message
+        except DecompressionError:
+            raise DecompressionError('"message" could not be decompressed')
+
+    def parse(self, message):
+        if not isinstance(message, str):
+            raise ValueError('"message" argument expects type "str"')
+        try:
+            json_message = json.loads(message)
+            return self.parse_json(json_message)
         except (KeyError, JSONDecodeError):
             return message
         except DecompressionError:
