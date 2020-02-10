@@ -21,7 +21,8 @@ def readme():
 
 
 setup(name='boto3_large_message_utils',
-      description='This library provides a way of bypassing AWS size restrictions when using services such as SQS and SNS.',
+      description='This library provides a way of bypassing AWS size restrictions when using services such as SQS and '
+                  'SNS.',
       url='https://github.com/ajhaining/boto3_large_message_utils',
       license='MIT',
       author='Andrew Haining',
