@@ -1,6 +1,6 @@
 import json
 from json import JSONDecodeError
-
+from collections import Mapping
 import boto3
 
 from boto3_large_message_utils.utils.compression import (
@@ -17,8 +17,6 @@ class LargeMessageParser:
         self.s3 = boto3.client("s3")
 
     def parse_json(self, json_message):
-        if not isinstance(json_message, dict):
-            raise ValueError('"message" argument expects type "dict"')
         message = self._parse_contents(json_message)
         return json.loads(message)
 
