@@ -1,13 +1,13 @@
 import json
 from json import JSONDecodeError
-from collections import Mapping
+
 import boto3
 
+from boto3_large_message_utils.exceptions import DecompressionError
 from boto3_large_message_utils.utils.compression import (
     decode_and_decompress_string,
     decompress_string,
 )
-from boto3_large_message_utils.exceptions import DecompressionError
 
 
 class LargeMessageParser:
