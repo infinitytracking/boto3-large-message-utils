@@ -39,7 +39,7 @@ message = msg_handler.submit_message(my_message)
 # send message to SQS, SNS or another AWS service
 ```
 
-## Message with Message Attributes
+### Message with Message Attributes
 
 ```python
 # create your message in the normal way, submit_message expects a string
