@@ -14,11 +14,24 @@ BUCKET_PREFIX = "my-bucket-prefix"
 @mock_s3
 class TestS3Integration(TestCase):
     def setUp(self):
-        self.base = LargeMessageHandler(s3_bucket_for_cache=BUCKET_NAME, s3_object_prefix=BUCKET_PREFIX)
+        self.base = LargeMessageHandler(
+            s3_bucket_for_cache=BUCKET_NAME, s3_object_prefix=BUCKET_PREFIX
+        )
 
-        self.client = boto3.client("s3")
+        self.client = boto3.client(
+            "s3",
+            region_name="eu-west-1",
+            aws_access_key_id="fake_access_key",
+            aws_secret_access_key="fake_secret_key",
+        )
         try:
-            self.resource = boto3.resource("s3")
+            self.resource = boto3.resource(
+                "s3",
+                region_name="eu-west-1",
+                aws_access_key_id="fake_access_key",
+                aws_secret_access_key="fake_secret_key",
+            )
+
             self.resource.meta.client.head_bucket(Bucket=BUCKET_NAME)
         except ClientError:
             pass
@@ -38,7 +51,11 @@ class TestS3Integration(TestCase):
 
         cached_message = json.loads(self.base._store_message_in_s3(test_message))
 
-        keys = list(self.resource.Bucket(BUCKET_NAME).objects.filter(Prefix=cached_message.get('key')))
+        keys = list(
+            self.resource.Bucket(BUCKET_NAME).objects.filter(
+                Prefix=cached_message.get("key")
+            )
+        )
         self.assertEqual(1, len(keys))
 
         s3_object = keys[0].get()
@@ -48,7 +65,7 @@ class TestS3Integration(TestCase):
         self.assertEqual(test_message, s3_object_body)
 
     def test_store_message_in_s3_exception_handling(self):
-        self.base.s3_bucket_for_cache = 'bucket-does-not-exist'
+        self.base.s3_bucket_for_cache = "bucket-does-not-exist"
 
         test_message = "This is a test message"
 
@@ -57,16 +74,18 @@ class TestS3Integration(TestCase):
 
     def test_retrieve_message_from_s3(self):
         test_message = "This is a test message"
-        test_key = 'test-key'
+        test_key = "test-key"
 
-        self.client.put_object(Bucket=BUCKET_NAME, Body=test_message.encode('utf-8'), Key=test_key)
+        self.client.put_object(
+            Bucket=BUCKET_NAME, Body=test_message.encode("utf-8"), Key=test_key
+        )
 
         message = self.base._retrieve_message_from_s3(BUCKET_NAME, test_key)
 
         self.assertEqual(test_message, message)
 
     def test_retrieve_message_from_s3_exception_handling(self):
-        test_key = 'test-key-does-not-exist'
+        test_key = "test-key-does-not-exist"
 
         with self.assertRaises(ClientError):
             self.base._retrieve_message_from_s3(BUCKET_NAME, test_key)
