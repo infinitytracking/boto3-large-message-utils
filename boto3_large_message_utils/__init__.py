@@ -1,5 +1,6 @@
-from boto3_large_message_utils.large_message_handler import LargeMessageHandler
+from boto3_large_message_utils.builder import LargeMessageBuilder
+from boto3_large_message_utils.parser import LargeMessageParser
 
-__all__ = ["LargeMessageHandler"]
+__all__ = ["LargeMessageBuilder", "LargeMessageParser"]
 
-__version__ = "0.0.3"
+__version__ = "0.1.0"

@@ -14,12 +14,12 @@ pip install boto3_large_message_utils
 
 ### Initialise Handler
 
-Import and set up the `LargeMessageHandler`
+Import and set up the `Base`
 
 ```python
-from boto3_large_message_utils import LargeMessageHandler
+from boto3_large_message_utils import Base
 
-msg_handler = LargeMessageHandler(
+msg_handler = Base(
     s3_bucket_for_cache='my-bucket', #REQUIRED
     s3_object_prefix='my-prefix',
     compress=True,
@@ -57,7 +57,7 @@ message = msg_handler.submit_message(my_message, message_attributes)
 
 ### Parse a message
 
-Handle a message that has been optimised by the LargeMessageHandler.
+Handle a message that has been optimised by the Base.
 
 ```python
 # received message from SQS or another AWS service.

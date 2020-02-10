@@ -1,18 +1,16 @@
 from unittest import TestCase
 from unittest.mock import patch
 
-from boto3_large_message_utils.utils import (
+from boto3_large_message_utils.utils.compression import (
     compress_and_encode_string,
     compress_string,
     decode_and_decompress_string,
     decompress_string,
-    get_size_of_string_in_bytes,
-    generate_s3_object_key,
 )
 
 
 class TestCompressString(TestCase):
-    @patch("boto3_large_message_utils.utils.gzip.compress")
+    @patch("boto3_large_message_utils.utils.compression.gzip.compress")
     def test_gzip_compress_is_called_correctly(self, mock_gzip_compress):
         compress_string("this is a test message")
 
@@ -27,7 +25,7 @@ class TestCompressString(TestCase):
 
 class TestCompressAndEncodeString(TestCase):
     @patch(
-        "boto3_large_message_utils.utils.gzip.compress",
+        "boto3_large_message_utils.utils.compression.gzip.compress",
         return_value=b"mocked gzip bytes",
     )
     def test_gzip_compress_is_called_correctly(self, mock_gzip):
@@ -68,57 +66,3 @@ class TestDecodeAndDecompressString(TestCase):
     def test_value_error_is_raised(self):
         with self.assertRaises(ValueError):
             compress_string({"msg": "this method only supports strings"})
-
-
-class TestGetSizeOfStringInBytes(TestCase):
-    def test_correct_string_length_is_returned(self):
-        expected = 30
-        actual = get_size_of_string_in_bytes("This string has 30 characters!")
-
-        self.assertEqual(expected, actual)
-
-    def test_value_error_is_raised(self):
-        with self.assertRaises(ValueError):
-            get_size_of_string_in_bytes({"msg": "this method only supports strings"})
-
-
-class TestGenerateS3ObjectKey(TestCase):
-    @patch(
-        "boto3_large_message_utils.utils.uuid.uuid4",
-        return_value="abcde-fghi-jklm-nopqrstuvwxyz",
-    )
-    def test_prefix_is_added(self, mock_uuid):
-        expected = "my-test-prefix/abcde-fghi-jklm-nopqrstuvwxyz"
-        actual = generate_s3_object_key(prefix="my-test-prefix")
-
-        self.assertEqual(expected, actual)
-
-    @patch(
-        "boto3_large_message_utils.utils.uuid.uuid4",
-        return_value="abcde-fghi-jklm-nopqrstuvwxyz",
-    )
-    def test_prefix_gets_preceding_and_trailing_slashes_removed(self, mock_uuid):
-        expected = "my-test-prefix-two/abcde-fghi-jklm-nopqrstuvwxyz"
-        actual = generate_s3_object_key(prefix="///my-test-prefix-two///")
-
-        self.assertEqual(expected, actual)
-
-    @patch(
-        "boto3_large_message_utils.utils.uuid.uuid4",
-        return_value="abcde-fghi-jklm-nopqrstuvwxyz",
-    )
-    def test_prefix_none(self, mock_uuid):
-        expected = "abcde-fghi-jklm-nopqrstuvwxyz"
-        actual = generate_s3_object_key()
-
-        self.assertEqual(expected, actual)
-
-    @patch(
-        "boto3_large_message_utils.utils.uuid.uuid4",
-        return_value="abcde-fghi-jklm-nopqrstuvwxyz",
-    )
-    def test_prefix_empty_string(self, mock_uuid):
-        expected = "abcde-fghi-jklm-nopqrstuvwxyz"
-        actual = generate_s3_object_key(prefix="")
-
-        self.assertEqual(expected, actual)
