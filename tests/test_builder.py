@@ -1,20 +1,16 @@
-import gzip
-import io
 from unittest import TestCase
 from unittest.mock import patch, Mock
 
-from botocore.response import StreamingBody
-
 from boto3_large_message_utils.exceptions import CompressionError
-from boto3_large_message_utils.large_message_handler import LargeMessageHandler
+from boto3_large_message_utils.builder import LargeMessageBuilder
 
 
 class TestGetCompressedMessageBody(TestCase):
     def setUp(self):
-        self.base = LargeMessageHandler(s3_bucket_for_cache="test-s3-bucket")
+        self.base = LargeMessageBuilder(s3_bucket_for_cache="test-s3-bucket")
 
     @patch(
-        "boto3_large_message_utils.large_message_handler.compress_and_encode_string",
+        "boto3_large_message_utils.builder.compress_and_encode_string",
         return_value="<Compressed and Encoded>",
     )
     def test_compressed_message_body_object_is_returned(self, mock_compress_and_encode):
@@ -33,7 +29,7 @@ class TestGetCompressedMessageBody(TestCase):
 
 class TestGetCachedMessageBody(TestCase):
     def setUp(self):
-        self.base = LargeMessageHandler(s3_bucket_for_cache="test-s3-bucket")
+        self.base = LargeMessageBuilder(s3_bucket_for_cache="test-s3-bucket")
 
     def test_cached_message_body_object_is_returned(self):
         expected = '{"bucket": "test-s3-bucket", "key": "test-object-key", "compressed": false}'
@@ -54,7 +50,7 @@ class TestGetCachedMessageBody(TestCase):
 
 class TestHandleMessage(TestCase):
     def setUp(self):
-        self.base = LargeMessageHandler(s3_bucket_for_cache="test-s3-bucket")
+        self.base = LargeMessageBuilder(s3_bucket_for_cache="test-s3-bucket")
 
     def test_original_message_is_returned_when_it_is_small_enough(self):
         expected = '{"hello": "world"}'
@@ -63,7 +59,7 @@ class TestHandleMessage(TestCase):
         self.assertEqual(expected, actual)
 
     @patch(
-        "boto3_large_message_utils.large_message_handler.LargeMessageHandler._get_compressed_message_body"
+        "boto3_large_message_utils.builder.LargeMessageBuilder._get_compressed_message_body"
     )
     def test_compressed_message_is_returned_when_compress_is_true(
         self, mock_get_compressed_message_body
@@ -80,12 +76,8 @@ class TestHandleMessage(TestCase):
 
         self.assertEqual(expected, actual)
 
-    @patch(
-        "boto3_large_message_utils.large_message_handler.LargeMessageHandler._store_message_in_s3"
-    )
-    def test_cached_message_is_returned_when_compress_is_false(
-        self, mock_store_in_s3
-    ):
+    @patch("boto3_large_message_utils.builder.LargeMessageBuilder._store_message_in_s3")
+    def test_cached_message_is_returned_when_compress_is_false(self, mock_store_in_s3):
         mock_store_in_s3.return_value = '{"bucket": "test-s3-bucket", "key": "test-object-key", "compressed": false}'
 
         self.base.message_size_threshold = 40
@@ -98,11 +90,9 @@ class TestHandleMessage(TestCase):
 
         self.assertEqual(expected, actual)
 
+    @patch("boto3_large_message_utils.builder.LargeMessageBuilder._store_message_in_s3")
     @patch(
-        "boto3_large_message_utils.large_message_handler.LargeMessageHandler._store_message_in_s3"
-    )
-    @patch(
-        "boto3_large_message_utils.large_message_handler.LargeMessageHandler._get_compressed_message_body"
+        "boto3_large_message_utils.builder.LargeMessageBuilder._get_compressed_message_body"
     )
     def test_cached_message_is_returned_when_compress_is_true(
         self, mock_get_compressed_message_body, mock_store_message_in_s3
@@ -129,7 +119,7 @@ class TestHandleMessage(TestCase):
 
 class TestHandleMessageWithMessageAttributes(TestCase):
     def setUp(self):
-        self.base = LargeMessageHandler(s3_bucket_for_cache="test-s3-bucket")
+        self.base = LargeMessageBuilder(s3_bucket_for_cache="test-s3-bucket")
 
     def test_original_message_is_returned_when_it_is_small_enough(self):
         test_message = '{"hello": "world"}'
@@ -158,7 +148,7 @@ class TestHandleMessageWithMessageAttributes(TestCase):
         self.assertEqual(expected, actual)
 
     @patch(
-        "boto3_large_message_utils.large_message_handler.LargeMessageHandler._get_compressed_message_body"
+        "boto3_large_message_utils.builder.LargeMessageBuilder._get_compressed_message_body"
     )
     def test_compressed_message_is_returned_when_compress_is_true(
         self, mock_get_compressed_message_body
@@ -196,7 +186,7 @@ class TestHandleMessageWithMessageAttributes(TestCase):
         self.assertEqual(expected, actual)
 
     @patch(
-        "boto3_large_message_utils.large_message_handler.LargeMessageHandler._store_message_in_s3",
+        "boto3_large_message_utils.builder.LargeMessageBuilder._store_message_in_s3",
         return_value='{"bucket": "test-s3-bucket", "key": "test-object-key", "compressed": false}',
     )
     def test_cached_message_is_returned_when_compress_is_false(
@@ -233,7 +223,7 @@ class TestHandleMessageWithMessageAttributes(TestCase):
         self.assertEqual(expected, actual)
 
     @patch(
-        "boto3_large_message_utils.large_message_handler.LargeMessageHandler._store_message_in_s3",
+        "boto3_large_message_utils.builder.LargeMessageBuilder._store_message_in_s3",
         return_value='{"bucket": "test-s3-bucket", "key": "test-object-key", "compressed": true}',
     )
     def test_cached_message_is_returned_when_compress_is_true(
@@ -272,12 +262,12 @@ class TestHandleMessageWithMessageAttributes(TestCase):
 
 
 @patch(
-    "boto3_large_message_utils.large_message_handler.generate_s3_object_key",
+    "boto3_large_message_utils.builder.generate_s3_object_key",
     return_value="abcde-fghi-jklm-nopqrstuvwxyz",
 )
 class TestStoreInS3(TestCase):
     def setUp(self):
-        self.base = LargeMessageHandler(s3_bucket_for_cache="test-s3-bucket")
+        self.base = LargeMessageBuilder(s3_bucket_for_cache="test-s3-bucket")
         self.base.s3 = Mock()
 
     def test_put_object(self, mock_uuid):
@@ -292,7 +282,7 @@ class TestStoreInS3(TestCase):
         )
 
     @patch(
-        "boto3_large_message_utils.large_message_handler.compress_string",
+        "boto3_large_message_utils.builder.compress_string",
         return_value=b"test bytes",
     )
     def test_put_object_with_compression(self, mock_uuid, mock_compress_string):
@@ -310,14 +300,12 @@ class TestStoreInS3(TestCase):
 
 
 @patch(
-    "boto3_large_message_utils.large_message_handler.LargeMessageHandler._handle_message_with_message_attributes"
+    "boto3_large_message_utils.builder.LargeMessageBuilder._handle_message_with_message_attributes"
 )
-@patch(
-    "boto3_large_message_utils.large_message_handler.LargeMessageHandler._handle_message"
-)
+@patch("boto3_large_message_utils.builder.LargeMessageBuilder._handle_message")
 class TestSubmitMessage(TestCase):
     def setUp(self):
-        self.base = LargeMessageHandler(s3_bucket_for_cache="test-s3-bucket")
+        self.base = LargeMessageBuilder(s3_bucket_for_cache="test-s3-bucket")
         self.base.s3 = Mock()
 
     def test_message_without_message_attributes(
@@ -325,7 +313,7 @@ class TestSubmitMessage(TestCase):
     ):
         test_message = "this is a test message"
 
-        self.base.submit_message(test_message)
+        self.base.build(test_message)
 
         mock_handle_msg.assert_called_with(test_message)
         mock_handle_msg_with_attrs.assert_not_called()
@@ -336,45 +324,7 @@ class TestSubmitMessage(TestCase):
         test_message = "this is a test message"
         test_attributes = {"msg": "attrs"}
 
-        self.base.submit_message(test_message, test_attributes)
+        self.base.build(test_message, test_attributes)
 
         mock_handle_msg.assert_not_called()
         mock_handle_msg_with_attrs.assert_called_with(test_message, test_attributes)
-
-
-class TestRetrieveFromS3(TestCase):
-    def setUp(self):
-        self.base = LargeMessageHandler(s3_bucket_for_cache="test-s3-bucket")
-        self.base.s3.get_object = Mock()
-
-    def test_retrieve_message_from_s3(self):
-        test_message = "this is a mock message"
-        test_key = "test-key"
-
-        self.base.s3.get_object.return_value = mock_s3_response(test_message.encode())
-
-        actual = self.base._retrieve_message_from_s3("test-s3-bucket", test_key)
-
-        self.assertEqual(test_message, actual)
-        self.base.s3.get_object.assert_called_with(
-            Bucket="test-s3-bucket", Key="test-key"
-        )
-
-    def test_retrieve_message_from_s3_with_compression(self):
-        test_message = "this is a mock message"
-        test_key = "test-key"
-
-        self.base.s3.get_object.return_value = mock_s3_response(
-            gzip.compress(test_message.encode())
-        )
-
-        actual = self.base._retrieve_message_from_s3("test-s3-bucket", test_key, True)
-
-        self.assertEqual(test_message, actual)
-        self.base.s3.get_object.assert_called_with(
-            Bucket="test-s3-bucket", Key="test-key"
-        )
-
-
-def mock_s3_response(body):
-    return {"Body": StreamingBody(io.BytesIO(body), len(body))}
