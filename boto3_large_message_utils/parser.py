@@ -19,6 +19,10 @@ class LargeMessageParser:
     def parse_json(self, json_message):
         if not isinstance(json_message, dict):
             raise ValueError('"message" argument expects type "dict"')
+        message = self._parse_contents(json_message)
+        return json.loads(message)
+
+    def _parse_contents(self, json_message):
         try:
             if json_message.get("compressedMessage"):
                 return decode_and_decompress_string(
@@ -41,7 +45,7 @@ class LargeMessageParser:
             raise ValueError('"message" argument expects type "str"')
         try:
             json_message = json.loads(message)
-            return self.parse_json(json_message)
+            return self._parse_contents(json_message)
         except (KeyError, JSONDecodeError):
             return message
         except DecompressionError:
