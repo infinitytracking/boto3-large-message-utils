@@ -16,7 +16,7 @@ class LargeMessageParser:
             self.s3 = session.client("s3")
         self.s3 = boto3.client("s3")
 
-    def parse_message(self, message):
+    def parse(self, message):
         if not isinstance(message, str):
             raise ValueError('"message" argument expects type "str"')
         try:

@@ -33,7 +33,7 @@ class LargeMessageBuilder:
             self.s3 = session.client("s3")
         self.s3 = boto3.client("s3")
 
-    def submit_message(self, message, message_attributes: dict = None):
+    def build(self, message, message_attributes: dict = None):
         if message_attributes:
             return self._handle_message_with_message_attributes(
                 message, message_attributes

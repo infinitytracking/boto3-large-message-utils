@@ -313,7 +313,7 @@ class TestSubmitMessage(TestCase):
     ):
         test_message = "this is a test message"
 
-        self.base.submit_message(test_message)
+        self.base.build(test_message)
 
         mock_handle_msg.assert_called_with(test_message)
         mock_handle_msg_with_attrs.assert_not_called()
@@ -324,7 +324,7 @@ class TestSubmitMessage(TestCase):
         test_message = "this is a test message"
         test_attributes = {"msg": "attrs"}
 
-        self.base.submit_message(test_message, test_attributes)
+        self.base.build(test_message, test_attributes)
 
         mock_handle_msg.assert_not_called()
         mock_handle_msg_with_attrs.assert_called_with(test_message, test_attributes)

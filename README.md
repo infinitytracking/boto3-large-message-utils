@@ -14,12 +14,12 @@ pip install boto3_large_message_utils
 
 ### Initialise Handler
 
-Import and set up the `Base`
+Import and set up the `LargeMessageBuilder`
 
 ```python
-from boto3_large_message_utils import Base
+from boto3_large_message_utils import LargeMessageBuilder
 
-msg_handler = Base(
+builder = LargeMessageBuilder(
     s3_bucket_for_cache='my-bucket', #REQUIRED
     s3_object_prefix='my-prefix',
     compress=True,
@@ -31,27 +31,27 @@ msg_handler = Base(
 ### Handle a message
 
 ```python
-# create your message in the normal way, submit_message expects a string
-my_message = json.dumps({ 'content': 'this is my message' })
+# create your message in the normal way, build expects a string
+msg = json.dumps({ 'content': 'this is my message' })
 
 # submit your message to the handler
-message = msg_handler.submit_message(my_message)
+new_msg = builder.build(msg)
 # send message to SQS, SNS or another AWS service
 ```
 
 ### Message with Message Attributes
 
 ```python
-# create your message in the normal way, submit_message expects a string
-my_message = json.dumps({ 'content': 'this is my message' })
-message_attributes = {
+# create your message in the normal way, build expects a string
+msg = json.dumps({ 'content': 'this is my message' })
+msg_attr = {
     "MSG_ATTR": {
         "StringValue": "my-value"
     }
 }
 
 # submit your message to the handler
-message = msg_handler.submit_message(my_message, message_attributes)
+msg = builder.build(msg, msg_attr)
 # send message to SQS, SNS or another AWS service
 ```
 
@@ -61,5 +61,8 @@ Handle a message that has been optimised by the Base.
 
 ```python
 # received message from SQS or another AWS service.
-my_message = msg_handler.parse_message(received_message)
+parser = LargeMessageParser(
+    #session=session, # Pass an optional boto3 session to initialise the client from the session
+)
+msg = parser.parse(received_message)
 ```
