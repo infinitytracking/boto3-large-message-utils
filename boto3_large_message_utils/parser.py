@@ -18,7 +18,10 @@ class LargeMessageParser:
 
     def parse_json(self, json_message):
         message = self._parse_contents(json_message)
-        return json.loads(message)
+        if isinstance(message, str):
+            return json.loads(message)
+        else:
+            return message
 
     def _parse_contents(self, json_message):
         try:
