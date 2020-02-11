@@ -31,7 +31,8 @@ class LargeMessageBuilder:
 
         if session:
             self.s3 = session.client("s3")
-        self.s3 = boto3.client("s3")
+        else:
+            self.s3 = boto3.client("s3")
 
     def build(self, message, message_attributes: dict = None):
         if message_attributes:

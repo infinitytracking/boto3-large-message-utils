@@ -14,7 +14,8 @@ class LargeMessageParser:
     def __init__(self, session=None):
         if session:
             self.s3 = session.client("s3")
-        self.s3 = boto3.client("s3")
+        else:
+            self.s3 = boto3.client("s3")
 
     def parse_json(self, json_message):
         message = self._parse_contents(json_message)
